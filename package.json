@@ -1,5 +1,4 @@
 {
-  "type": "module",
   "name": "vr-chat-discord",
   "version": "1.0.0",
   "description": "Discord bot that monitors and provides which vrchat friends are online.",
@@ -23,7 +22,9 @@
     "axios-cookiejar-support": "^2.0.3",
     "discord-api-types": "^0.24.0",
     "discord.js": "^13.2.0",
+    "dotenv": "^10.0.0",
     "forever": "^4.0.1",
+    "moment": "^2.29.1",
     "tough-cookie": "^4.0.0",
     "vrchat": "^1.5.2",
     "websocket": "^1.0.34",
