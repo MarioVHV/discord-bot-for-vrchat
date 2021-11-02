@@ -1,50 +1,57 @@
+import dotenv from "dotenv";
+import websocket from 'websocket'
 import axios from "axios";
-import websocket from "websocket"
 import vrchat from "vrchat";
-const WebSocketClient = websocket.client
-const client = new WebSocketClient();
-
+import moment from 'moment';
+import { Client, Intents } from 'discord.js';
+dotenv.config();
 axios.defaults.headers = {
     'Content-Type': 'application/json',
-    Authorization: 'Bot xx.Xr4SrQ.xx'
+    Authorization: `Bot ${process.env.DISCORD_BOT_TOKEN}`
 }
 
+const WebSocketClient = websocket.client
+const client = new WebSocketClient();
+const discord = new Client({ intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES]});
+
 const configuration = new vrchat.Configuration({
-    username: "xxx",
-    password: "xx"
+    username: `${process.env.VRC_USERNAME}`,
+    password: `${process.env.VRC_PASSWORD}`
 });
 
 const AuthenticationApi = new vrchat.AuthenticationApi(configuration);
 const FriendsApi = new vrchat.FriendsApi(configuration);
 
-let initialCheck = []
 let onlineFriends = [];
-let friendsIds = {};
+let friendId = {};
 
-AuthenticationApi.getCurrentUser().then(() => {
-    FriendsApi.getFriends()
-    .then(({data}) => {
-        initialCheck = data;
-        initialCheck.map((user) => {
-            if (user.location.length > 1) {
+const updateDiscord = () => {
+    axios({
+        method: 'patch',
+        url: `https://discord.com/api/channels/${process.env.DISCORD_CHANNEL_ID}/messages/${process.env.DISCORD_MESSAGE_ID}`,
+        data: {
+            "content": `Currently Online (Last Updated: ${moment().format('LTS')}): ${onlineFriends.map((friend) => {
+                return `<:6164lightgreensmalldot:904307577192607754>${friend}`
+            })}`
+        }
+    });
+}
 
-                friendsIds[user.id] = user.displayName;
-                onlineFriends.push(user.displayName)
-            }
-        })
-        axios({
-            method: 'patch',
-            url: 'https://discord.com/api/channels/xxx/messages/xxx',
-            data: {
-                "content": `Currently Online: ${onlineFriends.map((friend) => {
-                        return `<:6164lightgreensmalldot:904307577192607754>${friend}`
-                })}`
-            }
-        });
-        // console.log(onlineFriends)
-        // console.log(friendsIds)
+AuthenticationApi.getCurrentUser()
+    .then(() => {
+        FriendsApi.getFriends()
+            .then(({ data: friends }) => {
+                onlineFriends = [];
+                friends.map((friend) => {
+                    friendId[friend.id] = friend.displayName;
+                    if (friend.location.length > 0 && friend.displayName !== "xero_chris" && friend.displayName !== "Alfafles c3a1" && friend.displayName !== "S̳l̳u̳g̳s̳V̳R̳" && friend.displayName !== "ShortyPebbles20" && friend.displayName !== "XenoRyoga" && friend.displayName !== "Spartan81000" && friend.displayName !== "Tayッ a421") {
+                        onlineFriends.push(friend.displayName);
+                    }
+                })
+                console.log(onlineFriends);
+                updateDiscord();
+            })
     })
-});
 
 client.on("connect", (connection) => {
     console.log('WebSocket Client Connected');
@@ -56,91 +63,36 @@ client.on("connect", (connection) => {
     });
     connection.on('message', function (message) {
         let parsed = JSON.parse(message.utf8Data);
-        let {type, content} = parsed;
-        content = JSON.parse(content); // Possible crash - content may come already as JSON
-        console.log(type)
+        let { type, content } = parsed;
+        content = JSON.parse(content);
 
-        if (type === "friend-offline") { // Need to create condition to check if user location isn't empty (active)
-            // console.log(friendsIds);
-            // console.log(content.userId);
-            // console.log(`${friendsIds[content.userId]} has gone offline.`);
-            // axios({
-            //     method: 'post',
-            //     url: 'https://discord.com/api/channels/xxx/messages',
-            //     data: {
-            //         "content": `${friendsIds[content.userId]} has gone offline.`
-            //     }
-            // });
-            AuthenticationApi.getCurrentUser().then(() => {
-                FriendsApi.getFriends()
-                .then(({data}) => {
-                    initialCheck = data;
-                    onlineFriends = [];
-                    initialCheck.map((user) => {
-                        if (user.location.length > 1) {
-                            friendsIds[user.id] = user.displayName;
-                            onlineFriends.push(user.displayName)
-                        }
-                    })
-                    if (content.user.location.length > 0) {
-                        axios({
-                            method: 'patch',
-                            url: 'https://discord.com/api/channels/xxxx/messages/xxxx',
-                            data: {
-                                "content": `Currently Online: ${onlineFriends.map((friend) => {
-                                        return `<:6164lightgreensmalldot:904307577192607754>${friend}`
-                                })}`
-                            }
-                        });
-                    }
-                    // console.log(onlineFriends)
-                    // console.log(friendsIds)
-                })
-            });
+        if (type === "friend-offline") {
+            console.log(`${friendId[content.userId]} has gone offline.`);
+            onlineFriends = onlineFriends.filter((friend) => {
+                return friend !== `${friendId[content.userId]}`;
+            })
+            console.log(onlineFriends);
+            updateDiscord();
         }
 
         if (type === "friend-online") {
-            AuthenticationApi.getCurrentUser().then(() => {
-                FriendsApi.getFriends()
-                .then(({data}) => {
-                    initialCheck = data;
-                    onlineFriends = [];
-                    initialCheck.map((user) => {
-                        if (user.location.length > 1) {
-                            friendsIds[user.id] = user.displayName;
-                            onlineFriends.push(user.displayName)
-                        }
-                    })
-                    if (content.user.location.lenght > 0) {
-                        axios({
-                            method: 'patch',
-                            url: 'https://discord.com/api/channels/xxx/messages/xxx',
-                            data: {
-                                "content": `Currently Online: ${onlineFriends.map((friend) => {
-                                        return `<:6164lightgreensmalldot:904307577192607754>${friend}`
-                                })}`
-                            }
-                        }); 
-                    }
-                    // console.log(onlineFriends)
-                    // console.log(friendsIds)
-                })
-            });
-            // let {displayName} = content.user;
-            // console.log(displayName);
-            // axios({
-            //     method: 'post',
-            //     url: 'https://discord.com/api/channels/xxxx/messages',
-            //     data: {
-            //         "content": `${displayName} has come online.`
-            //     }
-            // });
+            console.log(`${content.user.displayName} has gone online.`);
+            if (content.user.displayName !== "xero_chris" && content.user.displayName !== "Alfafles c3a1" && content.user.displayName !== "S̳l̳u̳g̳s̳V̳R̳" && content.user.displayName !== "ShortyPebbles20" && content.user.displayName !== "XenoRyoga" && content.user.displayName !== "Spartan81000" && content.user.displayName !== "Tayッ a421") {
+                onlineFriends.push(content.user.displayName)
+            }
+            console.log(onlineFriends)
+            updateDiscord();
+        }
+
+        if (type === "friend-active") {
+            console.log(`${content.user.displayName} has gone active.`)
         }
     });
 })
 
+discord.login(process.env.DISCORD_BOT_TOKEN);
 client.connect(
-    "wss://pipeline.vrchat.cloud/?authToken=authcookie_xxxx",
+    `wss://pipeline.vrchat.cloud/?authToken=${process.env.VRC_AUTH_TOKEN}`,
     "echo-protocol",
     null,
     {

@@ -1,5 +1,4 @@
-config.json
-index-old.js
+package-lock.json
 # Logs
 logs
 *.log
