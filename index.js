@@ -3,7 +3,7 @@ import websocket from 'websocket'
 import axios from "axios";
 import vrchat from "vrchat";
 import moment from 'moment';
-
+import { Client, Intents } from 'discord.js';
 dotenv.config();
 axios.defaults.headers = {
     'Content-Type': 'application/json',
@@ -12,6 +12,7 @@ axios.defaults.headers = {
 
 const WebSocketClient = websocket.client
 const client = new WebSocketClient();
+const discord = new Client({ intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES]});
 
 const configuration = new vrchat.Configuration({
     username: `${process.env.VRC_USERNAME}`,
@@ -40,9 +41,10 @@ AuthenticationApi.getCurrentUser()
     .then(() => {
         FriendsApi.getFriends()
             .then(({ data: friends }) => {
+                onlineFriends = [];
                 friends.map((friend) => {
                     friendId[friend.id] = friend.displayName;
-                    if (friend.location.length > 0) {
+                    if (friend.location.length > 0 && friend.displayName !== "xero_chris" && friend.displayName !== "Alfafles c3a1" && friend.displayName !== "S̳l̳u̳g̳s̳V̳R̳" && friend.displayName !== "ShortyPebbles20" && friend.displayName !== "XenoRyoga" && friend.displayName !== "Spartan81000" && friend.displayName !== "Tayッ a421") {
                         onlineFriends.push(friend.displayName);
                     }
                 })
@@ -75,7 +77,9 @@ client.on("connect", (connection) => {
 
         if (type === "friend-online") {
             console.log(`${content.user.displayName} has gone online.`);
-            onlineFriends.push(content.user.displayName)
+            if (content.user.displayName !== "xero_chris" && content.user.displayName !== "Alfafles c3a1" && content.user.displayName !== "S̳l̳u̳g̳s̳V̳R̳" && content.user.displayName !== "ShortyPebbles20" && content.user.displayName !== "XenoRyoga" && content.user.displayName !== "Spartan81000" && content.user.displayName !== "Tayッ a421") {
+                onlineFriends.push(content.user.displayName)
+            }
             console.log(onlineFriends)
             updateDiscord();
         }
@@ -86,6 +90,7 @@ client.on("connect", (connection) => {
     });
 })
 
+discord.login(process.env.DISCORD_BOT_TOKEN);
 client.connect(
     `wss://pipeline.vrchat.cloud/?authToken=${process.env.VRC_AUTH_TOKEN}`,
     "echo-protocol",
@@ -94,4 +99,3 @@ client.connect(
         "User-Agent": "Mozilla/5.0 (platform; rv:geckoversion) Gecko/geckotrail Firefox/firefoxversion"
     }
 );
-
