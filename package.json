@@ -1,4 +1,5 @@
 {
+  "type": "module",
   "name": "vr-chat-discord",
   "version": "1.0.0",
   "description": "Discord bot that monitors and provides which vrchat friends are online.",
