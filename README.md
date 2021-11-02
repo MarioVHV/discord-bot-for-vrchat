@@ -15,6 +15,10 @@ VRC_USERNAME=USERNAME
 VRC_PASSWORD=PASSWORD
 VRC_AUTH_TOKEN=AUTH_TOKEN
 ```
+To install the dependencies, you will need to run the following command in your terminal.
+```bash
+  npm install
+```
 To start the bot, you will need to run the following command in your terminal.
 ```bash
   npm start
