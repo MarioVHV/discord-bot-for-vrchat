@@ -1,6 +1,8 @@
 
 # Discord VRCHAT BOT: Show Online Friends
 
+WARNING: This is spagetti code, not well written or optimized.
+
 Using VRCHAT's websocket notifications, the bot will check notification types for "friend-online" and "friend-offline" to keep track of current online users.
 Using Discord's API, the bot will update a message when there is a new online or offline friend.
 
